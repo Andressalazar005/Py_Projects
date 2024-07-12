@@ -12,7 +12,7 @@ def load_client_config(file_path="credentials/credentials.json"):
         return json.load(file)
 
 def save_to_csv(data, filename="scraped_data.csv"):
-    df = pd.DataFrame(data, columns=["Links"])
+    df = pd.DataFrame(data)
     df.to_csv(filename, index=False)
 
 def extract_spreadsheet_id(url):
@@ -22,7 +22,7 @@ def extract_spreadsheet_id(url):
     else:
         raise ValueError("Invalid Google Sheets URL format")
 
-def get_authenticated_session(client_config, token_file="token.json"):
+def get_authenticated_session(client_config, token_file="credentials/token.json"):
     creds = None
     if os.path.exists(token_file):
         creds = Credentials.from_authorized_user_file(token_file, ["https://www.googleapis.com/auth/spreadsheets"])
@@ -39,7 +39,7 @@ def get_authenticated_session(client_config, token_file="token.json"):
     session.headers.update({'Authorization': f'Bearer {creds.token}'})
     return session
 
-def upload_to_google_sheets(data, spreadsheet_url, range_name="Sheet1!A1", token_file="token.json"):
+def upload_to_google_sheets(data, spreadsheet_url, range_name="Sheet1!A1", token_file="credentials/token.json"):
     client_config = load_client_config()
 
     try:
@@ -53,11 +53,8 @@ def upload_to_google_sheets(data, spreadsheet_url, range_name="Sheet1!A1", token
     payload = {
         "range": range_name,
         "majorDimension": "ROWS",
-        "values": [[link] for link in data]  # Ensure each URL is in its own list
+        "values": [[item['Product Name'], item['Price'], item['Rating'], item['Reviews'], item['URL']] for item in data]
     }
-
-    # Debugging: Print the payload to verify the structure
-    print(json.dumps(payload, indent=2))
 
     try:
         session = get_authenticated_session(client_config, token_file)

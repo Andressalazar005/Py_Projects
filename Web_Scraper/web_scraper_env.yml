@@ -1,15 +1,11 @@
 name: web_scraper_env
-channels:
-  - defaults
-  - conda-forge
 dependencies:
   - python=3.8
-  - beautifulsoup4
-  - gspread
-  - oauth2client
-  - pandas
+  - pip
   - requests
-  - tk
+  - beautifulsoup4
+  - pandas
   - pip:
-      - google-auth-oauthlib
-      - google-auth-httplib2
+    - google-auth-oauthlib
+    - selenium
+    - fake-useragent

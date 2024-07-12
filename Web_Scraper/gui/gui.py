@@ -158,7 +158,18 @@ def start_gui():
     hint_icon_label.grid_forget()
 
     # Tooltip for the hint icon
-    tooltip_text = "Standard Scrape Filters:\n- a[href]\n- img[src]\n- div.class_name\n- p#id"
+    tooltip_text = (
+        "Standard Scrape Filters:\n"
+        "- a[href]\n"
+        "- img[src]\n"
+        "- div.class_name\n"
+        "- p#id\n\n"
+        "Amazon Filters:\n"
+        "- product_name: span.a-size-medium\n"
+        "- price: span.a-price-whole\n"
+        "- rating: span.a-icon-alt\n"
+        "- reviews: span.a-size-base"
+    )
     ToolTip(hint_icon_label, tooltip_text)
 
     # Label for the Data Filter section
@@ -191,6 +202,7 @@ def start_gui():
 
     auth_button = ttk.Button(root, text="Open Google Sheets", command=open_google_sheets)
     auth_button.grid(column=4, row=4, padx=5, pady=5)
+    auth_button.grid_forget()
     auth_button.grid_forget()
 
     start_button = ttk.Button(root, text="Start Scraping", command=start_scraping)
