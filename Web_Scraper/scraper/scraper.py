@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import logging
+import re
+from scraper.predefined_selectors import get_predefined_selectors
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -70,8 +72,17 @@ def extract_page_title(html_content):
         logging.error(f"Error extracting page title: {e}")
         return "No title found"
 
+def parse_site_name(url):
+    domain = re.findall(r"https?://(www\.)?([^/]+)", url)
+    if domain:
+        return domain[0][1].split('.')[0]
+    return ""
+
 def scrape_website(url, selectors=None):
     logging.info(f"Starting to scrape website: {url}")
+    site_name = url.split('//')[-1].split('/')[0].split('.')[1]
+    predefined_selectors = get_predefined_selectors(site_name)
+
     response = initial_request(url)
     if not response:
         response = request_with_user_agent(url)
@@ -82,7 +93,7 @@ def scrape_website(url, selectors=None):
         if isinstance(response, str):
             html_content = response
         else:
-            return []
+            return None
 
     html_content = response.content if not isinstance(response, str) else response
     page_title = extract_page_title(html_content)
@@ -92,15 +103,14 @@ def scrape_website(url, selectors=None):
     scraped_data = []
 
     if selectors:
-        for selector, include in selectors:
+        for selector_name, include in selectors:
+            selector = predefined_selectors.get(selector_name, selector_name)
             elements = soup.select(selector)
             for element in elements:
                 scraped_data.append({
-                    'Product Name': element.get_text() if include else str(element),
-                    'Price': 'N/A',  # Placeholder, adjust as needed
-                    'Rating': 'N/A',  # Placeholder, adjust as needed
-                    'Reviews': 'N/A',  # Placeholder, adjust as needed
-                    'URL': url  # Example field
+                    selector_name: element.get_text() if include else str(element),
+                    'URL': url
                 })
 
     return {'title': page_title, 'data': scraped_data}
+

@@ -11,3 +11,4 @@ dependencies:
     - fake-useragent
     - gspread
     - oauth2client
+    - webdriver_manager

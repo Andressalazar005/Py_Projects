@@ -1,4 +1,5 @@
 import requests
+import time
 
 def make_request_with_session(url, session, headers, max_retries=5, backoff_factor=1):
     for attempt in range(max_retries):
