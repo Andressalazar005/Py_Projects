@@ -9,3 +9,5 @@ dependencies:
     - google-auth-oauthlib
     - selenium
     - fake-useragent
+    - gspread
+    - oauth2client

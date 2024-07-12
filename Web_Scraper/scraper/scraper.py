@@ -1,44 +1,106 @@
-import logging
 import requests
+from fake_useragent import UserAgent
+import time
 from bs4 import BeautifulSoup
-from scraper.tiered_requests import initial_request, request_with_user_agent, request_with_delay, request_with_selenium
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import logging
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def scrape_website(url, selectors):
-    logging.info(f"Starting to scrape the website: {url}")
+def initial_request(url, proxies=None):
+    try:
+        logging.info("Starting initial request.")
+        response = requests.get(url, proxies=proxies)
+        response.raise_for_status()
+        logging.info("Initial request successful.")
+        return response
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching the URL: {e}")
+        return None
 
+def request_with_user_agent(url, proxies=None):
+    try:
+        logging.info("Starting request with user agent.")
+        ua = UserAgent()
+        headers = {'User-Agent': ua.random}
+        response = requests.get(url, headers=headers, proxies=proxies)
+        response.raise_for_status()
+        logging.info("Request with user agent successful.")
+        return response
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching the URL with user agent: {e}")
+        return None
+
+def request_with_delay(url, proxies=None):
+    try:
+        logging.info("Starting request with delay.")
+        time.sleep(5)
+        response = requests.get(url, proxies=proxies)
+        response.raise_for_status()
+        logging.info("Request with delay successful.")
+        return response
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching the URL with delay: {e}")
+        return None
+
+def request_with_selenium(url):
+    try:
+        logging.info("Starting request with Selenium.")
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.get(url)
+        time.sleep(5)  # Wait for the page to fully load
+        response = driver.page_source
+        driver.quit()
+        logging.info("Request with Selenium successful.")
+        return response
+    except Exception as e:
+        logging.error(f"Error fetching the URL with Selenium: {e}")
+        return None
+
+def extract_page_title(html_content):
+    try:
+        soup = BeautifulSoup(html_content, 'html.parser')
+        title = soup.title.string if soup.title else "No title found"
+        return title
+    except Exception as e:
+        logging.error(f"Error extracting page title: {e}")
+        return "No title found"
+
+def scrape_website(url, selectors=None):
+    logging.info(f"Starting to scrape website: {url}")
     response = initial_request(url)
     if not response:
-        logging.warning("Initial request failed, trying with user agent...")
         response = request_with_user_agent(url)
-
     if not response:
-        logging.warning("User agent request failed, trying with delay...")
         response = request_with_delay(url)
-
     if not response:
-        logging.warning("Delayed request failed, trying with Selenium...")
         response = request_with_selenium(url)
+        if isinstance(response, str):
+            html_content = response
+        else:
+            return []
 
-    if not response:
-        logging.error("All request methods failed. Cannot scrape the website.")
-        return "Error"
+    html_content = response.content if not isinstance(response, str) else response
+    page_title = extract_page_title(html_content)
+    logging.info(f"Page title extracted: {page_title}")
 
-    if isinstance(response, str):
-        soup = BeautifulSoup(response, 'html.parser')
-    else:
-        soup = BeautifulSoup(response.content, 'html.parser')
+    soup = BeautifulSoup(html_content, 'html.parser')
+    scraped_data = []
 
-    data = []
-    for selector, include in selectors:
-        logging.debug(f"Processing selector: {selector} (include: {include})")
-        elements = soup.select(selector)
-        if include:
+    if selectors:
+        for selector, include in selectors:
+            elements = soup.select(selector)
             for element in elements:
-                text = element.get_text(strip=True)
-                data.append(text)
-                logging.debug(f"Found data: {text}")
+                scraped_data.append({
+                    'Product Name': element.get_text() if include else str(element),
+                    'Price': 'N/A',  # Placeholder, adjust as needed
+                    'Rating': 'N/A',  # Placeholder, adjust as needed
+                    'Reviews': 'N/A',  # Placeholder, adjust as needed
+                    'URL': url  # Example field
+                })
 
-    logging.info("Scraping completed.")
-    return data
+    return {'title': page_title, 'data': scraped_data}

@@ -14,6 +14,9 @@ sheet_label = None
 add_element_button = None
 data_filter_label = None
 hint_icon = None
+hint_icon_label = None
+start_button = None
+title_label = None
 
 # Define the ToolTip class
 class ToolTip:
@@ -48,21 +51,25 @@ def start_scraping():
 
     selectors = [(element['selector'].get(), element['include'].get()) for element in elements]
 
+    data, result = scrape_website(url, selectors), None
+
     if selected_option == "CSV":
         filename = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if filename:
-            data = scrape_website(url, selectors)
             save_to_csv(data, filename)
             messagebox.showinfo("CSV Saved", f"Data saved to {filename}")
     elif selected_option == "Google Sheets":
         spreadsheet_url = auth_entry.get()
         if spreadsheet_url:
-            data = scrape_website(url, selectors)
             success = upload_to_google_sheets(data, spreadsheet_url)
             if success:
                 messagebox.showinfo("Google Sheets Uploaded", "Data uploaded to Google Sheets")
             else:
                 messagebox.showerror("Error", "Failed to upload data to Google Sheets")
+
+    # Display the page title
+    if result and 'title' in result:
+        title_label.config(text=f"Page Title: {result['title']}")
 
 def open_google_sheets():
     webbrowser.open("https://sheets.google.com")
@@ -91,6 +98,7 @@ def handle_option_selection(*args):
             widget.grid_forget()
         elements.clear()
     update_start_button()
+
 
 def add_element():
     row = len(elements)
@@ -131,7 +139,7 @@ def on_frame_configure(canvas):
     canvas.configure(scrollregion=canvas.bbox("all"))
 
 def start_gui():
-    global url_entry, var, elements_frame, auth_entry, auth_button, sheet_label, add_element_button, start_button, elements_canvas, data_filter_label, hint_icon_label
+    global url_entry, var, elements_frame, auth_entry, auth_button, sheet_label, add_element_button, start_button, elements_canvas, data_filter_label, hint_icon_label, title_label
 
     root = tk.Tk()
     root.title("Web Scraper")
@@ -203,11 +211,13 @@ def start_gui():
     auth_button = ttk.Button(root, text="Open Google Sheets", command=open_google_sheets)
     auth_button.grid(column=4, row=4, padx=5, pady=5)
     auth_button.grid_forget()
-    auth_button.grid_forget()
 
     start_button = ttk.Button(root, text="Start Scraping", command=start_scraping)
     start_button.grid(column=0, row=5, columnspan=5, pady=10, sticky='ew')
     start_button.grid_forget()
+
+    title_label = ttk.Label(root, text="")
+    title_label.grid(column=0, row=6, columnspan=5, pady=10, sticky='ew')
 
     root.mainloop()
 
