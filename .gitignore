@@ -166,3 +166,4 @@ Web_Scraper/token.json
 *.csv
 /Web_Scraper/credentials
 Web_Scraper/credentials/credentials.json
+Web_Scraper/credentials/credentials.json
