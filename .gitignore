@@ -163,3 +163,4 @@ cython_debug/
 Web_Scraper/credentials/credentials.json
 Web_Scraper/token.json
 /Web_Scraper/credentials
+*.csv
