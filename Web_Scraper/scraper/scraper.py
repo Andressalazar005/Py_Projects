@@ -2,8 +2,20 @@ import requests
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
-def scrape_website(url):
+def scrape_website(url, selectors):
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
-    links = soup.find_all('a', href=True)
-    return [urljoin(url, link['href']) for link in links]  # Convert relative URLs to full URLs
+    results = []
+    
+    for selector, include in selectors:
+        if include:
+            elements = soup.select(selector)
+            for element in elements:
+                if element.name == "a":
+                    results.append(urljoin(url, element.get('href')))
+                elif element.name == "img":
+                    results.append(urljoin(url, element.get('src')))
+                else:
+                    results.append(element.get_text(strip=True))
+    
+    return results
