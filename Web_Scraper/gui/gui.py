@@ -77,7 +77,7 @@ def start_scraping():
                     messagebox.showerror("Error", "Failed to upload data to Google Sheets")
 
         # Display the page title
-        title_label.config(text=f"Page Title: {result['title']}")
+        #title_label.config(text=f"Page Title: {result['title']}")
     else:
         messagebox.showerror("Error", "Failed to scrape the website.")
 
@@ -164,10 +164,10 @@ def start_gui():
 
     root = tk.Tk()
     root.title("Web Scraper")
-
+    root.iconbitmap("logo-1.ico")
     title_label = ttk.Label(root, text="", font=("Helvetica", 16))
     title_label.grid(column=1, row=0, columnspan=4, pady=(10, 0), padx=5, sticky='ew')
-    
+    title_label.anchor()
 
     ttk.Label(root, text="Enter Website to Scrape:").grid(column=0, row=1, sticky='e', padx=5, pady=5)
     url_entry = ttk.Entry(root, width=50)
@@ -199,7 +199,7 @@ def start_gui():
         "- div.class_name\n"
         "- p#id\n\n"
         "Amazon Filters:\n"
-        "- product_name: span.a-size-medium\n"
+        "- name: span.a-size-medium\n"
         "- price: span.a-price-whole\n"
         "- rating: span.a-icon-alt\n"
         "- reviews: span.a-size-base"

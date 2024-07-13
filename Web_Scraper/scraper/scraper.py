@@ -7,6 +7,7 @@ from selenium.webdriver.chrome.options import Options
 import logging
 import re
 from scraper.predefined_selectors import get_predefined_selectors
+from urllib.parse import urljoin
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -102,15 +103,46 @@ def scrape_website(url, selectors=None):
     soup = BeautifulSoup(html_content, 'html.parser')
     scraped_data = []
 
+    seen_composite_keys = set()
+
     if selectors:
-        for selector_name, include in selectors:
-            selector = predefined_selectors.get(selector_name, selector_name)
-            elements = soup.select(selector)
-            for element in elements:
-                scraped_data.append({
-                    selector_name: element.get_text() if include else str(element),
-                    'URL': url
-                })
+        item_selector = predefined_selectors.get('item', 'div')  # Use the predefined item container selector
+        items = soup.select(item_selector)
+        for item in items:
+            item_data = {}
+            valid_data = True  # Flag to check if item contains valid data
+
+            for selector_name, include in selectors:
+                selector = predefined_selectors.get(selector_name, selector_name)
+                element = item.select_one(selector)
+                if element:
+                    if selector_name == 'price':
+                        whole = item.select_one('span.a-price-whole')
+                        fraction = item.select_one('span.a-price-fraction')
+                        if whole and fraction:
+                            item_data['price'] = f"{whole.text.strip()}{fraction.text.strip()}"
+                        elif whole:
+                            item_data['price'] = whole.text.strip()
+                        else:
+                            item_data['price'] = None
+                        logging.info(f"Extracted price: {item_data['price']}")
+                    else:
+                        item_data[selector_name] = element.get_text(strip=True) if include else str(element)
+                else:
+                    logging.warning(f"Element not found for selector: {selector_name}")
+                    valid_data = False  # Mark as invalid data if any selector is not found
+
+            link_element = item.select_one('a.a-link-normal')
+            if link_element and 'href' in link_element.attrs:
+                item_data['URL'] = urljoin(url, link_element['href'])
+            else:
+                item_data['URL'] = url  # fallback to the main page URL if item URL is not found
+
+            # Use all data fields as the composite key
+            composite_key = tuple(item_data.items())
+            if valid_data and len(item_data) > 1 and composite_key not in seen_composite_keys:  # Ensure no duplicates
+                seen_composite_keys.add(composite_key)
+                scraped_data.append(item_data)
+                logging.info(f"Scraped data: {item_data}")
 
     return {'title': page_title, 'data': scraped_data}
-

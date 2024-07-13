@@ -2,11 +2,10 @@
 
 PREDEFINED_SELECTORS = {
     'amazon': {
-        'product_name': 'span.a-text-normal',
+        'name': 'span.a-text-normal',
         'price': 'span.a-price-whole',
         'rating': 'span.a-icon-alt',
         'reviews': 'span.a-size-base',
-        'link': 'a.a-link-normal'
     }
 }
 
