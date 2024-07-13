@@ -118,7 +118,7 @@ def scrape_website(url, selectors=None):
                         whole = item.select_one('span.a-price-whole')
                         fraction = item.select_one('span.a-price-fraction')
                         if whole and fraction:
-                            item_data['price'] = f"{whole.text.strip()}.{fraction.text.strip()}"
+                            item_data['price'] = f"{whole.text.strip()}{fraction.text.strip()}"
                         elif whole:
                             item_data['price'] = whole.text.strip()
                         else:
