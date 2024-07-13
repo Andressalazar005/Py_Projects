@@ -176,8 +176,9 @@ def update_elements_based_on_url(*args):
     elements.clear()
 
     if predefined_selectors:
-        for selector_name, selector_value in predefined_selectors.items():
-            add_predefined_element(selector_name, selector_value)
+        # for selector_name, selector_value in predefined_selectors.items():
+        #     add_predefined_element(selector_name, selector_value)
+        logging("predefined selectors found")
     else:
         add_element(predefined=False)
 
