@@ -103,8 +103,6 @@ def scrape_website(url, selectors=None):
     soup = BeautifulSoup(html_content, 'html.parser')
     scraped_data = []
 
-    seen_composite_keys = set()
-
     if selectors:
         item_selector = predefined_selectors.get('item', 'div')  # Use the predefined item container selector
         items = soup.select(item_selector)
@@ -120,7 +118,7 @@ def scrape_website(url, selectors=None):
                         whole = item.select_one('span.a-price-whole')
                         fraction = item.select_one('span.a-price-fraction')
                         if whole and fraction:
-                            item_data['price'] = f"{whole.text.strip()}{fraction.text.strip()}"
+                            item_data['price'] = f"{whole.text.strip()}.{fraction.text.strip()}"
                         elif whole:
                             item_data['price'] = whole.text.strip()
                         else:
@@ -138,11 +136,13 @@ def scrape_website(url, selectors=None):
             else:
                 item_data['URL'] = url  # fallback to the main page URL if item URL is not found
 
-            # Use all data fields as the composite key
-            composite_key = tuple(item_data.items())
-            if valid_data and len(item_data) > 1 and composite_key not in seen_composite_keys:  # Ensure no duplicates
-                seen_composite_keys.add(composite_key)
-                scraped_data.append(item_data)
-                logging.info(f"Scraped data: {item_data}")
+            if valid_data and len(item_data) > 1:
+                # Check if the current item_data already exists in scraped_data
+                composite_key = tuple(item_data.get(selector_name) for selector_name, _ in selectors)
+                if not any(composite_key == tuple(scraped_item.get(selector_name) for selector_name, _ in selectors) for scraped_item in scraped_data):
+                    scraped_data.append(item_data)
+                    logging.info(f"Scraped data: {item_data}")
+                else:
+                    logging.info(f"Duplicate found and ignored: {item_data}")
 
     return {'title': page_title, 'data': scraped_data}
