@@ -1,0 +1,3 @@
+[submodule "Facial_Recognition"]
+	path = Facial_Recognition
+	url = https://github.com/Andressalazar005/Facial_Recognition.git
